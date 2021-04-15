@@ -39,46 +39,12 @@
  * SOFTWARE.
  * #L%
  */
-package com.redhat.rhjmc.containerjfr.net.web.http.api.v2;
+package com.redhat.rhjmc.containerjfr.rules;
 
-import io.vertx.ext.web.handler.impl.HttpStatusException;
+import java.io.IOException;
 
-public class ApiException extends HttpStatusException {
-
-    protected final String apiStatus;
-    protected final String reason;
-
-    ApiException(int statusCode, String apiStatus, String reason, Throwable cause) {
-        super(statusCode, cause);
-        this.apiStatus = apiStatus;
-        this.reason = reason;
-    }
-
-    ApiException(int statusCode, String apiStatus, String reason) {
-        this(statusCode, apiStatus, reason, null);
-    }
-
-    ApiException(int statusCode, String reason, Throwable cause) {
-        this(statusCode, null, reason, cause);
-    }
-
-    ApiException(int statusCode, String reason) {
-        this(statusCode, null, reason, null);
-    }
-
-    ApiException(int statusCode, Throwable cause) {
-        this(statusCode, cause.getMessage());
-    }
-
-    ApiException(int statusCode) {
-        this(statusCode, (String) null);
-    }
-
-    public String getApiStatus() {
-        return apiStatus;
-    }
-
-    public String getFailureReason() {
-        return reason;
+public class RuleException extends IOException {
+    RuleException(String reason) {
+        super(reason);
     }
 }
