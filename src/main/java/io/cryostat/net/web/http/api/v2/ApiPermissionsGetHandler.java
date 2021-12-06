@@ -48,6 +48,8 @@ import javax.inject.Inject;
 
 import io.cryostat.net.AuthManager;
 import io.cryostat.net.security.ResourceAction;
+import io.cryostat.net.security.ResourceType;
+import io.cryostat.net.security.ResourceVerb;
 import io.cryostat.net.web.WebServer;
 import io.cryostat.net.web.http.HttpMimeType;
 import io.cryostat.net.web.http.RequestHandler;
@@ -64,6 +66,9 @@ class ApiPermissionsGetHandler
 
     private final Lazy<WebServer> webServer;
     private final Lazy<Set<RequestHandler>> handlers;
+
+    private static final Set<GroupResource> PERMISSION_NOT_REQUIRED =
+            Set.of(GroupResource.PERMISSION_NOT_REQUIRED);
 
     @Inject
     ApiPermissionsGetHandler(
@@ -151,8 +156,70 @@ class ApiPermissionsGetHandler
     }
 
     private String resourceDescription(ResourceAction resourceAction) {
-        return String.format(
-                "%s: %s",
-                resourceAction.getResource().toString(), resourceAction.getVerb().toString());
+        Set<GroupResource> resources = map(resourceAction.getResource());
+        String verb = map(resourceAction.getVerb());
+
+        return String.format("%s: %s", resources.toString(), verb);
+    }
+
+    private static Set<GroupResource> map(ResourceType resource) {
+        switch (resource) {
+            case TARGET:
+                return Set.of(GroupResource.FLIGHTRECORDERS);
+            case RECORDING:
+                return Set.of(GroupResource.RECORDINGS);
+            case CERTIFICATE:
+                return Set.of(
+                        GroupResource.DEPLOYMENTS, GroupResource.PODS, GroupResource.CRYOSTATS);
+            case CREDENTIALS:
+                return Set.of(GroupResource.CRYOSTATS);
+            case TEMPLATE:
+            case REPORT:
+            case RULE:
+            default:
+                return PERMISSION_NOT_REQUIRED;
+        }
+    }
+
+    private static String map(ResourceVerb verb) {
+        switch (verb) {
+            case CREATE:
+                return "create";
+            case READ:
+                return "get";
+            case UPDATE:
+                return "patch";
+            case DELETE:
+                return "delete";
+            default:
+                throw new IllegalArgumentException(
+                        String.format("Unknown resource verb \"%s\"", verb));
+        }
+    }
+
+    private static enum GroupResource {
+        DEPLOYMENTS("apps", "deployments"),
+        PODS("", "pods"),
+        CRYOSTATS("operator.cryostat.io", "cryostats"),
+        FLIGHTRECORDERS("operator.cryostat.io", "flightrecorders"),
+        RECORDINGS("operator.cryostat.io", "recordings"),
+        PERMISSION_NOT_REQUIRED("", "PERMISSION_NOT_REQUIRED"),
+        ;
+
+        private final String group;
+        private final String resource;
+
+        private GroupResource(String group, String resource) {
+            this.group = group;
+            this.resource = resource;
+        }
+
+        public String getGroup() {
+            return group;
+        }
+
+        public String getResource() {
+            return resource;
+        }
     }
 }
